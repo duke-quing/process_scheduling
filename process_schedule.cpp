@@ -15,7 +15,6 @@ int main(){
       cin >> arr_time >> burst_time >> prio_num;
       proc_scheduler.inputProcess(arr_time, burst_time, prio_num);
     }
-    proc_scheduler.printProcessDetails();
+    proc_scheduler.fcfs();
   }
-
 }
