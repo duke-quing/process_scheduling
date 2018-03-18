@@ -10,11 +10,11 @@ int main(){
   for(int cases = 0; cases<testCases; cases++){
     cin>> process_count;
     Scheduler proc_scheduler;
-    for(int process = 0; process< process_count; process++){
+    for(int process_idx = 0; process_idx< process_count; process_idx++){
       int arr_time, burst_time, prio_num;
       cin >> arr_time >> burst_time >> prio_num;
-      proc_scheduler.inputProcess(arr_time, burst_time, prio_num);
+      proc_scheduler.inputProcess(arr_time, burst_time, prio_num, process_idx);
     }
-    proc_scheduler.fcfs();
+    proc_scheduler.runFcfs();
   }
 }

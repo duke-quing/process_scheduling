@@ -11,14 +11,17 @@ class Scheduler{
       std::vector<process> process_vector;
       std::vector<process> run_queue;
   public:
-      Scheduler(){}
+    // 2 Constructor for Scheduler class
+      Scheduler(){
+        timeElapsed = 0;
+      }
       Scheduler(std::vector<process> p){
         process_vector = p;
         run_queue = p;
       }
       //From text file to vector of processes
-      void inputProcess(int arr_time, int burst_time, int prio_num){
-        process p = process(arr_time, burst_time, prio_num);
+      void inputProcess(int arr_time, int burst_time, int prio_num, int idx){
+        process p = process(arr_time, burst_time, prio_num, idx);
         process_vector.push_back(p);
         run_queue.push_back(p);
       }
@@ -41,7 +44,7 @@ class Scheduler{
            }
          }
       }
-
+// For testing purposes : Print Process details
     void printProcessDetails(std::vector<process> processes){
       cout<< "ProcessIndex\t"<< "  Arrival Time \t   " << "Burst Time \t " << "Priority Index"<<endl;
       for(int i = 0; i<processes.size(); i++){
@@ -51,43 +54,76 @@ class Scheduler{
 
       }
     }
-    std::vector<process> fcfs(){
+  // Creation of vector with scheduled based on fcfs
+    void fcfs(){
       std::vector<process> fcfs;
       for(int proc_count = 0; proc_count<process_vector.size(); proc_count++){
         fcfs.push_back(findLeastArrival());
       }
-      printProcessDetails(fcfs);
-      return fcfs;
+      run_queue = fcfs;
+      printProcessDetails(run_queue);
     }
-    int getIndex(process p){
-      for(int i =0; i<process_vector.size(); i++){
-        if(p == process_vector[i]){
-          return i;
+// Tick Using FCFS Schedule
+    void runFcfs(){
+      int timeArrived;
+      int cpuTime;
+      std::vector<process>queue;
+      cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
+      while(!run_queue.empty()){
+        // if(timeElapsed<100){cout<<timeElapsed<<endl;}
+        for(int curr=0; curr<run_queue.size(); curr++){
+          if(timeElapsed == run_queue[curr].getArrival()){
+            run_queue[curr].setArrived(timeElapsed);
+            queue.push_back(run_queue[curr]);
+          }
         }
+        if(!queue.empty()){
+          queue[0].setBurst(queue[0].getBurst()-1);
+          // cout<<"CURRENT RUNNING PROCESS BURST TIME: "<<queue[0].getBurst()<< "  "<<timeElapsed<< endl;
+          if(queue[0].getBurst()==0){
+            timeArrived = queue[0].getArrived();
+            cpuTime = (timeElapsed+1)-timeArrived;
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
+            cpuTime<<"x\t \t"<<endl;
+            queue.erase(queue.begin());
+            run_queue.erase(run_queue.begin()+queue[0].getIndex());
+          }
+        }
+        timeElapsed++;
+      }
+    }
+// Tick Using SJF Scheduler
+    void runSJF(){
+      int timeArrived;
+      int cpuTime;
+      std::vector<process>queue;
+      cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
+      while(!run_queue.empty()){
+        // if(timeElapsed<100){cout<<timeElapsed<<endl;}
+        for(int curr=0; curr<run_queue.size(); curr++){
+          if(timeElapsed == run_queue[curr].getArrival()){
+            run_queue[curr].setArrived(timeElapsed);
+            queue.push_back(run_queue[curr]);
+          }
+        }
+        if(!queue.empty()){
+          queue[0].setBurst(queue[0].getBurst()-1);
+          // cout<<"CURRENT RUNNING PROCESS BURST TIME: "<<queue[0].getBurst()<< "  "<<timeElapsed<< endl;
+          if(queue[0].getBurst()==0){
+            timeArrived = queue[0].getArrived();
+            cpuTime = (timeElapsed+1)-timeArrived;
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
+            cpuTime<<"x\t \t"<<endl;
+            queue.erase(queue.begin());
+            run_queue.erase(run_queue.begin()+queue[0].getIndex());
+          }
+        }
+        timeElapsed++;
       }
     }
 
-    void runFcfs(){
-      int timeArrived;
-      std::vector<process> queue;
-      cout<< "ProcessIndex\t"<< "  Arrival Time \t   " << "Burst Time \t " << "Priority Index"<<endl;
-      while(!fcfs().empty()){
-        timeElapsed++;
-        for(int curr=0; curr<run_queue.size(); curr++){
-          if(timeElapsed == fcfs()[curr].getArrival()){
-            queue.push_back(fcfs()[curr]);
-            timeArrived = timeElapsed;
-          }
-          if(!queue.empty()){
-            queue[0].getBurst()-=1;
-            if(queue[0].getBurst()==0){
-              cout<< "     "<<timeElapsed<< "  "<<"\t\t"<< getIndex(queue[0])<<"\t\t"<<
-              timeElapsed<<"x\t \t"<<endl;
-              queue.erase(queue.begin());
-              fcfs().erase(fcfs().begin());
-            }
-          }
-        }
+    void searchJob(std::vector<process> queue){
+      for(int i = 0; i<queue.size(); i++){  
       }
     }
 };
