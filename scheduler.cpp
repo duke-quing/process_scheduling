@@ -98,7 +98,7 @@ class Scheduler{
   }
 
 // Tick Using FCFS Schedule
-    void runFcfs(){
+    void runFCFS(){
       int timeArrived = 0;
       int cpuTime = 0;
       //FCFS QUEUE : PROCESS THAT RUNS
@@ -125,6 +125,7 @@ class Scheduler{
             queue[0].resetCpuTime();
             queue.erase(queue.begin());
             wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
+            queue[0].setArrived(timeElapsed+1);
           }
         }
         timeElapsed++;
@@ -164,6 +165,7 @@ class Scheduler{
             wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
             curr_run.erase(curr_run.begin());
             curr_run.push_back(queue[0]);
+            curr_run[0].setArrived(timeElapsed+1);
             queue.erase(queue.begin());
           }
         }
@@ -172,49 +174,80 @@ class Scheduler{
     }
 
     void runSRTF(){
-        int timeArrived;
-        std::vector<process>queue;
-        bool queueAdded = false;
-        cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
-        while(!wait_queue.empty()){
-          for(int curr=0; curr<wait_queue.size(); curr++){
-            if(timeElapsed == wait_queue[curr].getArrival()){
-              wait_queue[curr].setArrived(timeElapsed);
-              queue.push_back(wait_queue[curr]);
-              queueAdded = true;
+      int timeArrived;
+      std::vector<process>queue;
+      std::vector<process> curr_run;
+      bool init = true;
+      bool queueAdded = false;
+      cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
+      while(!wait_queue.empty()){
+        for(int curr=0; curr<wait_queue.size(); curr++){
+          if(timeElapsed == wait_queue[curr].getArrival()){
+            wait_queue[curr].setArrived(timeElapsed);
+            queue.push_back(wait_queue[curr]);
+            queueAdded = true;
+          }
+        }
+        if(!queue.empty() && queueAdded){
+          sortByBurst(&queue);
+          if(init){
+            curr_run.push_back(queue[0]);
+            queue.erase(queue.begin());
+            init = false;
+          }
+          else{
+          if(pre_empt(&curr_run, &queue)){
+              // cout<<"lhs: "<< curr_run[0].getBurst()<<endl;
+              // cout<<"rhs: "<< queue[0].getBurst()<<endl;
+              timeArrived = curr_run[0].getArrived();
+              cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
+              curr_run[0].getCpuTime()<<"\t \t"<<endl;
+              //Reset the cpuTime count of the interrupted process
+              curr_run[0].resetCpuTime();
+              //Switch to the least burst time from queue
+              swapProcess(&curr_run, &queue, 0, queue.size()-1);
+              curr_run[0].setArrived(timeElapsed);
             }
           }
-          if(!queue.empty()){
-            //TICK BURST TIME
-            if(queueAdded){
-              if(pre_empt(&queue)){
-                cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
-                queue[0].getCpuTime()<<"\t \t"<<endl;
-                sortByBurst(&queue);
-                queue[0].setArrived(timeElapsed);
-              }
-            }
-            queue[0].tick();
-            //CHECK IF PROCESS ALREADY OVER
-            if(queue[0].isProcessOver()){
-              timeArrived = queue[0].getArrived();
-              cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
-              queue[0].getCpuTime()<<"x\t \t"<<endl;
-              queue[0].resetCpuTime();
-              queue.erase(queue.begin());
-              wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
-            }
+          queueAdded = false;
+        }
+        sortByBurst(&queue);
+        //Catch first iteration of  running
+        if(!curr_run.empty()){
+          curr_run[0].tick();
+          //CHECK IF PROCESS ALREADY OVER
+          if(curr_run[0].isProcessOver()){
+            timeArrived = curr_run[0].getArrived();
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
+            curr_run[0].getCpuTime()<<"x\t \t"<<endl;
+            curr_run[0].resetCpuTime();
+            wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
+            curr_run.erase(curr_run.begin());
+            curr_run.push_back(queue[0]);
+            queue.erase(queue.begin());
+            curr_run[0].setArrived(timeElapsed+1);
           }
-          timeElapsed++;
+        }
+        // cout<<"SET: "<<timeElapsed<<endl;
+        // printProcessDetails(queue);
+        // cout<<endl;
+        // printProcessDetails(curr_run);
+        // cout<<endl;
+        timeElapsed++;
       }
     }
-
-    bool pre_empt(std::vector<process> *q){
-      process holder = findLeastBurst(q);
-      if(!((*q)[0] == holder)){
+    void swapProcess(std::vector<process> *q, std::vector<process> *r, int qindex, int rindex){
+      process tempr = (*q)[qindex];
+      (*q)[qindex] = (*r)[rindex];
+      (*r)[rindex] = tempr;
+    }
+    bool pre_empt(std::vector<process> *lhs, std::vector<process> *rhs){
+      process holder = findLeastBurst(rhs);
+      if((*lhs)[0].getBurst() > holder.getBurst()){
+        rhs->push_back(holder);
         return true;
       }
-      q->push_back(holder);
+      rhs->push_back(holder);
       return false;
     }
 
