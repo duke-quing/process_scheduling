@@ -15,6 +15,10 @@ int main(){
       cin >> arr_time >> burst_time >> prio_num;
       proc_scheduler.inputProcess(arr_time, burst_time, prio_num, process_idx);
     }
-    proc_scheduler.runFcfs();
+    proc_scheduler.runSRTF();
+    // proc_scheduler.printProcessDetails(proc_scheduler.getWaitQueue());
+    // proc_scheduler.sortByBurst(proc_scheduler.getWaitQueueAddress());
+    // proc_scheduler.printProcessDetails(proc_scheduler.getWaitQueue());
+
   }
 }

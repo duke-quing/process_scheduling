@@ -4,13 +4,15 @@ class process{
     int prio_num;
     int timeArrived;
     int index;
+    int cpuTime;
 public:
-
+        process(){}
         process(int arr, int burst, int prio, int idx){
           arr_time = arr;
           burst_time=  burst;
           prio_num = prio;
           timeArrived = 0;
+          cpuTime = 0;
           index = idx;
         }
         int getArrival(){ return arr_time;}
@@ -18,6 +20,7 @@ public:
         int getPrio(){ return prio_num; }
         int getArrived(){ return timeArrived; }
         int getIndex(){ return index; }
+        int getCpuTime(){ return cpuTime; }
 
         void setBurst(int val){
           burst_time = val;
@@ -25,7 +28,19 @@ public:
         void setArrived(int val){
           timeArrived = val;
         }
+        void resetCpuTime(){
+          cpuTime = 0;
+        }
+        void tick(){
+          burst_time-=1;
+          cpuTime++;
+        }
         bool operator==( process & rhs){
           return (arr_time==rhs.getArrival() && burst_time==rhs.getBurst() && prio_num==rhs.getPrio());
         }
+        bool isProcessOver(){
+          return (burst_time==0);
+        }
+
+
 };
