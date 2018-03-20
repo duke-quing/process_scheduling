@@ -227,6 +227,70 @@ class Scheduler{
        std::swap(v[itemIndex], v.back()); // or swap with *(v.end()-1)
     }
 
+    // Tick Using FCFS Schedule
+    void runRobin(int quantum){
+      int timeArrived = 0;
+      int cpuTime = 0;
+      int qcount = quantum;
+      int counter = 0;
+      int turn = 0;
+      //FCFS QUEUE : PROCESS THAT RUNS
+      std::vector<process>queue;
+      std::vector<int>burst;
+    
+      cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
+
+      while(!wait_queue.empty()){
+        // if(timeElapsed<100){cout<<timeElapsed<<endl;}
+        //CHECKS IF ARRIVAL TIME IS SAME AS TIME ELAPSED
+        for(int curr=0; curr<wait_queue.size(); curr++){
+          if(timeElapsed == wait_queue[curr].getArrival()){
+            wait_queue[curr].setArrived(timeElapsed);
+            queue.push_back(wait_queue[curr]);
+            burst.push_back(wait_queue[curr].getBurst());
+          }
+        }
+        //CHECKS IF A PROCESS HAS ALREADY ARRIVED
+        if(!queue.empty()){
+          //TICK BURST TIME
+          //cout << qcount << "          " << queue[0].getBurst() << endl;
+          //printProcessDetails(queue);
+
+          if(!queue[0].isProcessOver() && qcount == 0){
+            timeArrived = queue[0].getArrived();
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
+            queue[0].getCpuTime()<<"\t \t"<< endl;
+            queue[0].resetCpuTime();
+            moveItemToBack(queue,0);
+            //queue.push_back(queue[0]);
+            //queue.erase(queue.begin());
+            queue[0].setArrived(timeElapsed);
+            qcount = quantum;
+          }
+
+          //CHECK IF PROCESS ALREADY OVER
+          if(queue[0].isProcessOver()){
+            timeArrived = queue[0].getArrived();
+            turn = timeArrived + queue[0].getCpuTime();
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
+            queue[0].getCpuTime()<<"x\t \t" << "TAT ->" << turn <<"\t \t" << "WT ->" << turn - burst[counter] << endl;
+            queue[0].resetCpuTime();
+            queue.erase(queue.begin());
+            wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
+            queue[0].setArrived(timeElapsed);
+            qcount = quantum;
+            counter++;
+          }
+
+        }
+          
+          queue[0].tick();
+          timeElapsed++;
+          qcount--;
+
+      }
+    }
+
     // //RETURN VECTOR SORTED BASED ON GIVEN SORT STRING
     // std::vector<process> SortBy(std::vector<process> processes, string SortString){
     //    	std::vector<int> Sorter;
