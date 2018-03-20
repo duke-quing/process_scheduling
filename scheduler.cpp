@@ -50,16 +50,23 @@ class Scheduler{
            }
          }
       }
-      process findLeastBurst(std::vector<process> *p){
+      process findLeast(std::vector<process> *p, string criteria){
          int newIndex = 0;
          //For loop left hand side of comparison
          for (int lhproc=0; lhproc<p->size(); lhproc++){
            //For loop right hand side of comparison
            newIndex = 0;
            for(int rhproc=0; rhproc<p->size(); rhproc++){
+             if(criteria == "BURST"){
              if((*p)[lhproc].getBurst() > (*p)[rhproc].getBurst()){
                newIndex++;
              }
+            }
+            else if(criteria == "PRIORITY"){
+              if((*p)[lhproc].getPrio() > (*p)[rhproc].getPrio()){
+                newIndex++;
+              }
+            }
            }
            if(newIndex==0){
              process temp = (*p)[lhproc];
@@ -76,7 +83,6 @@ class Scheduler{
         cout<< "     "<<i << "  "<<"\t\t"<< processes[i].getArrival()<<"\t\t"<<
         processes[i].getBurst()<<"\t \t"
         <<processes[i].getPrio()<<endl;
-
       }
     }
   // Creation of vector with scheduled based on fcfs
@@ -88,14 +94,20 @@ class Scheduler{
     //   wait_queue = fcfs;
     //   printProcessDetails(wait_queue);
     // }
-  void sortByBurst(std::vector<process> *p){
+  void sortBy(std::vector<process> *p, string criteria){
       std::vector<process> temp;
       int size = p->size();
       for(int proc_count = 0; proc_count<size; proc_count++){
-        temp.push_back(findLeastBurst(p));
+        if(criteria == "BURST"){
+          temp.push_back(findLeast(p, "BURST"));
+        }
+        else if(criteria == "PRIORITY"){
+          temp.push_back(findLeast(p, "PRIORITY"));
+        }
       }
       *p = temp;
   }
+
 
 // Tick Using FCFS Schedule
     void runFCFS(){
@@ -146,7 +158,7 @@ class Scheduler{
           }
         }
         if(!queue.empty()){
-          sortByBurst(&queue);
+          sortBy(&queue, "BURST");
         }
         if(init){
           curr_run.push_back(queue[0]);
@@ -181,6 +193,7 @@ class Scheduler{
       bool queueAdded = false;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
       while(!wait_queue.empty()){
+        //Find Process that Arrives already
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
@@ -188,17 +201,18 @@ class Scheduler{
             queueAdded = true;
           }
         }
+        //If there was a change in the queue vector
         if(!queue.empty() && queueAdded){
-          sortByBurst(&queue);
+          sortBy(&queue,"BURST");
+          //if first process to run
           if(init){
             curr_run.push_back(queue[0]);
             queue.erase(queue.begin());
             init = false;
           }
           else{
-          if(pre_empt(&curr_run, &queue)){
-              // cout<<"lhs: "<< curr_run[0].getBurst()<<endl;
-              // cout<<"rhs: "<< queue[0].getBurst()<<endl;
+          //check if there is a smaller process time in queue than the current running
+          if(pre_empt(&curr_run, &queue, "BURST")){
               timeArrived = curr_run[0].getArrived();
               cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
               curr_run[0].getCpuTime()<<"\t \t"<<endl;
@@ -206,12 +220,12 @@ class Scheduler{
               curr_run[0].resetCpuTime();
               //Switch to the least burst time from queue
               swapProcess(&curr_run, &queue, 0, queue.size()-1);
+              //set the arrival time for the newly running process
               curr_run[0].setArrived(timeElapsed);
             }
           }
           queueAdded = false;
         }
-        sortByBurst(&queue);
         //Catch first iteration of  running
         if(!curr_run.empty()){
           curr_run[0].tick();
@@ -220,35 +234,109 @@ class Scheduler{
             timeArrived = curr_run[0].getArrived();
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
             curr_run[0].getCpuTime()<<"x\t \t"<<endl;
-            curr_run[0].resetCpuTime();
+            //Remove from list of process to run
             wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
+            //Change the current running to next in queue
             curr_run.erase(curr_run.begin());
             curr_run.push_back(queue[0]);
             queue.erase(queue.begin());
             curr_run[0].setArrived(timeElapsed+1);
           }
         }
-        // cout<<"SET: "<<timeElapsed<<endl;
-        // printProcessDetails(queue);
-        // cout<<endl;
-        // printProcessDetails(curr_run);
-        // cout<<endl;
         timeElapsed++;
       }
     }
+
+    void runPriority(){
+      int timeArrived;
+      std::vector<process>queue;
+      std::vector<process> curr_run;
+      bool init = true;
+      bool queueAdded = false;
+      cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
+      while(!wait_queue.empty()){
+        //Find Process that Arrives already
+        for(int curr=0; curr<wait_queue.size(); curr++){
+          if(timeElapsed == wait_queue[curr].getArrival()){
+            wait_queue[curr].setArrived(timeElapsed);
+            queue.push_back(wait_queue[curr]);
+            queueAdded = true;
+          }
+        }
+        //If there was a change in the queue vector
+        if(!queue.empty() && queueAdded){
+          sortBy(&queue,"PRIORITY");
+          //if first process to run
+          if(init){
+            curr_run.push_back(queue[0]);
+            queue.erase(queue.begin());
+            init = false;
+          }
+          else{
+          //check if there is a smaller indices in queue than the current running
+          if(pre_empt(&curr_run, &queue, "PRIORITY")){
+              timeArrived = curr_run[0].getArrived();
+              cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
+              curr_run[0].getCpuTime()<<"\t \t"<<endl;
+              //Reset the cpuTime count of the interrupted process
+              curr_run[0].resetCpuTime();
+              //Switch to the least burst time from queue
+              swapProcess(&curr_run, &queue, 0, queue.size()-1);
+              //set the arrival time for the newly running process
+              curr_run[0].setArrived(timeElapsed);
+            }
+          }
+          queueAdded = false;
+        }
+        cout<<"QUEUE: " << timeElapsed<<endl;
+        printProcessDetails(queue);
+        cout<<endl;
+        printProcessDetails(curr_run);
+        cout<<endl;
+        //Catch first iteration of  running
+        if(!curr_run.empty()){
+          curr_run[0].tick();
+          //CHECK IF PROCESS ALREADY OVER
+          if(curr_run[0].isProcessOver()){
+            timeArrived = curr_run[0].getArrived();
+            cout<<"PROCESS ENDED : "<<endl;
+            cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
+            curr_run[0].getCpuTime()<<"x\t \t"<<endl;
+            //Remove from list of process to run
+            wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
+            //Change the current running to next in queue
+            curr_run.erase(curr_run.begin());
+          }
+        }
+
+        timeElapsed++;
+      }
+    }
+
     void swapProcess(std::vector<process> *q, std::vector<process> *r, int qindex, int rindex){
       process tempr = (*q)[qindex];
       (*q)[qindex] = (*r)[rindex];
       (*r)[rindex] = tempr;
     }
-    bool pre_empt(std::vector<process> *lhs, std::vector<process> *rhs){
-      process holder = findLeastBurst(rhs);
-      if((*lhs)[0].getBurst() > holder.getBurst()){
+    bool pre_empt(std::vector<process> *lhs, std::vector<process> *rhs, string criteria){
+      if(criteria == "BURST"){
+        process holder = findLeast(rhs, "BURST");
+        if((*lhs)[0].getBurst() > holder.getBurst()){
+          rhs->push_back(holder);
+          return true;
+        }
         rhs->push_back(holder);
-        return true;
+        return false;
       }
-      rhs->push_back(holder);
-      return false;
+      else if(criteria == "PRIORITY"){
+        process holder = findLeast(rhs, "PRIORITY");
+        if((*lhs)[0].getPrio() > holder.getPrio()){
+          rhs->push_back(holder);
+          return true;
+        }
+        rhs->push_back(holder);
+        return false;
+      }
     }
 
 //DESC ORDER FUNC FOR SORT ALGO
