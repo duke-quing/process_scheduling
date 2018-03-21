@@ -425,7 +425,8 @@ class Scheduler{
       double avg_response = 0;
       double utilization = 0;
       int donothing = 0;
-
+      int throughput = 99;
+      int final_Throughput = 0;
       int done_proc = 0;
       //FCFS QUEUE : PROCESS THAT RUNS
       std::vector<process>queue;
@@ -481,6 +482,7 @@ class Scheduler{
         }
         else donothing++;
 
+          if (throughput == timeElapsed) {final_Throughput = counter;}
           queue[0].tick();
           timeElapsed++;
           qcount--;
@@ -492,6 +494,7 @@ class Scheduler{
           cout << "Turnaround Time: " << turn << endl;
           cout << "Response Time: " << avg_response << endl;
           cout << "Utilization: " << utilization << "%" << endl;
+          cout << "Throughput at " << throughput << ": " << final_Throughput << endl;
       }
 
       }
