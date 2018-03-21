@@ -113,6 +113,16 @@ class Scheduler{
     void runFCFS(){
       int timeArrived = 0;
       int cpuTime = 0;
+      int counter = 0;
+      int turn = 0;
+      int wait_time = 0;
+      int total_wait_time = 0;
+      int total_response = 0;
+      double avg_response = 0;
+      double utilization = 0;
+      int donothing = 0;
+
+      std::vector<int>burst;
       //FCFS QUEUE : PROCESS THAT RUNS
       std::vector<process>queue;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
@@ -123,6 +133,7 @@ class Scheduler{
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
             queue.push_back(wait_queue[curr]);
+            burst.push_back(wait_queue[curr].getBurst());
           }
         }
         //CHECKS IF A PROCESS HAS ALREADY ARRIVED
@@ -132,15 +143,31 @@ class Scheduler{
           //CHECK IF PROCESS ALREADY OVER
           if(queue[0].isProcessOver()){
             timeArrived = queue[0].getArrived();
+            turn = timeArrived + queue[0].getCpuTime();
+            wait_time = turn - burst[counter];
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
-            queue[0].getCpuTime()<<"x\t \t"<<endl;
+            queue[0].getCpuTime()<<"x\t \t" << endl;
             queue[0].resetCpuTime();
             queue.erase(queue.begin());
             wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
             queue[0].setArrived(timeElapsed+1);
+            total_response += timeArrived;
+            total_wait_time += wait_time;
+            counter++;
+
           }
         }
+        else donothing++;
+
         timeElapsed++;
+        if (wait_queue.size() == 0) {
+          avg_response = total_response/burst.size();
+          utilization = ((((double)turn - (double)donothing)/(double)turn)*100);
+          cout << endl << "Cumulative Waiting Time: " << total_wait_time << endl;
+          cout << "Turnaround Time: " << turn << endl;
+          cout << "Response Time: " << avg_response << endl;
+          cout << "Utilization: " << utilization << "%" << endl;
+      }
       }
     }
 // Tick Using SJF Scheduler
@@ -187,8 +214,11 @@ class Scheduler{
 
     void runSRTF(){
       int timeArrived;
+      int counter= 0;
+      int turn;
       std::vector<process>queue;
       std::vector<process> curr_run;
+      std::vector<int>burst;
       bool init = true;
       bool queueAdded = false;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
@@ -199,6 +229,8 @@ class Scheduler{
             wait_queue[curr].setArrived(timeElapsed);
             queue.push_back(wait_queue[curr]);
             queueAdded = true;
+            burst.push_back(wait_queue[curr].getBurst());
+
           }
         }
         //If there was a change in the queue vector
@@ -232,15 +264,18 @@ class Scheduler{
           //CHECK IF PROCESS ALREADY OVER
           if(curr_run[0].isProcessOver()){
             timeArrived = curr_run[0].getArrived();
+            turn = timeArrived + curr_run[0].getCpuTime();
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
-            curr_run[0].getCpuTime()<<"x\t \t"<<endl;
+            curr_run[0].getCpuTime()<<"x\t \t"<< "TAT ->" << turn <<"\t \t" << "WT ->" << turn - curr_run[0].getCpuTime() << endl;
             //Remove from list of process to run
             wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
             //Change the current running to next in queue
+            //queue[0].resetCpuTime();
             curr_run.erase(curr_run.begin());
             curr_run.push_back(queue[0]);
             queue.erase(queue.begin());
             curr_run[0].setArrived(timeElapsed+1);
+            counter++;
           }
         }
         timeElapsed++;
@@ -348,14 +383,19 @@ class Scheduler{
        std::swap(v[itemIndex], v.back()); // or swap with *(v.end()-1)
     }
 
-    // Tick Using FCFS Schedule
     void runRobin(int quantum){
       int timeArrived = 0;
       int cpuTime = 0;
       int qcount = quantum;
       int counter = 0;
       int turn = 0;
-      //FCFS QUEUE : PROCESS THAT RUNS
+      int wait_time = 0;
+      int total_wait_time = 0;
+      int total_response = 0;
+      double avg_response = 0;
+      double utilization = 0;
+      int donothing = 0;
+
       std::vector<process>queue;
       std::vector<int>burst;
     
@@ -393,21 +433,34 @@ class Scheduler{
           if(queue[0].isProcessOver()){
             timeArrived = queue[0].getArrived();
             turn = timeArrived + queue[0].getCpuTime();
+            wait_time = turn - burst[counter];
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< queue[0].getIndex()<<"\t\t"<<
-            queue[0].getCpuTime()<<"x\t \t" << "TAT ->" << turn <<"\t \t" << "WT ->" << turn - burst[counter] << endl;
+            queue[0].getCpuTime()<<"x\t \t" << endl;
             queue[0].resetCpuTime();
             queue.erase(queue.begin());
             wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
             queue[0].setArrived(timeElapsed);
             qcount = quantum;
+            total_response += timeArrived;
+            total_wait_time += wait_time;
             counter++;
           }
 
         }
-          
+        else donothing++;
+
           queue[0].tick();
           timeElapsed++;
           qcount--;
+
+          if (wait_queue.size() == 0) {
+          avg_response = total_response/burst.size();
+          utilization = ((((double)turn - (double)donothing)/(double)turn)*100);
+          cout << endl << "Cumulative Waiting Time: " << total_wait_time << endl;
+          cout << "Turnaround Time: " << turn << endl;
+          cout << "Response Time: " << avg_response << endl;
+          cout << "Utilization: " << utilization << "%" << endl;
+      }
 
       }
     }

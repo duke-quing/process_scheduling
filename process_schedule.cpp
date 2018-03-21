@@ -15,12 +15,11 @@ int main(){
       cin >> arr_time >> burst_time >> prio_num;
       proc_scheduler.inputProcess(arr_time, burst_time, prio_num, process_idx);
     }
-<<<<<<< HEAD
-    proc_scheduler.runPriority();
-=======
+    //proc_scheduler.runPriority();
     proc_scheduler.runRobin(25);
-    //proc_scheduler.runRobin(15);
->>>>>>> fefc1b08001f06de62fb2e469903be2b66776ff0
+    //proc_scheduler.runFCFS();
+    //proc_scheduler.runSRTF();
+    //Sproc_scheduler.runSJF();
     // proc_scheduler.printProcessDetails(proc_scheduler.getWaitQueue());
     // proc_scheduler.sortBy(proc_scheduler.getWaitQueueAddress(), "PRIORITY");
     // proc_scheduler.printProcessDetails(proc_scheduler.getWaitQueue());
