@@ -5,6 +5,7 @@ class process{
     int timeArrived;
     int index;
     int cpuTime;
+    int pos;
 public:
         process(){}
         process(int arr, int burst, int prio, int idx){
@@ -14,6 +15,7 @@ public:
           timeArrived = 0;
           cpuTime = 0;
           index = idx;
+          pos = 0;
         }
         int getArrival(){ return arr_time;}
         int getBurst(){ return burst_time; }
@@ -21,6 +23,7 @@ public:
         int getArrived(){ return timeArrived; }
         int getIndex(){ return index; }
         int getCpuTime(){ return cpuTime; }
+        int getPos(){ return pos; }
 
         void setBurst(int val){
           burst_time = val;
@@ -30,6 +33,9 @@ public:
         }
         void resetCpuTime(){
           cpuTime = 0;
+        }
+        void setPos(int val){
+          pos = val;
         }
         void tick(){
           burst_time-=1;

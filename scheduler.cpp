@@ -58,9 +58,9 @@ class Scheduler{
            newIndex = 0;
            for(int rhproc=0; rhproc<p->size(); rhproc++){
              if(criteria == "BURST"){
-             if((*p)[lhproc].getBurst() > (*p)[rhproc].getBurst()){
-               newIndex++;
-             }
+               if((*p)[lhproc].getBurst() > (*p)[rhproc].getBurst()){
+                 newIndex++;
+               }
             }
             else if(criteria == "PRIORITY"){
               if((*p)[lhproc].getPrio() > (*p)[rhproc].getPrio()){
@@ -113,15 +113,17 @@ class Scheduler{
     void runFCFS(){
       int timeArrived = 0;
       int cpuTime = 0;
+      int done_proc=0;
       //FCFS QUEUE : PROCESS THAT RUNS
       std::vector<process>queue;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
-      while(!wait_queue.empty()){
+      while(done_proc!=process_vector.size()){
         // if(timeElapsed<100){cout<<timeElapsed<<endl;}
         //CHECKS IF ARRIVAL TIME IS SAME AS TIME ELAPSED
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
+            wait_queue[curr].setPos(curr);
             queue.push_back(wait_queue[curr]);
           }
         }
@@ -136,8 +138,8 @@ class Scheduler{
             queue[0].getCpuTime()<<"x\t \t"<<endl;
             queue[0].resetCpuTime();
             queue.erase(queue.begin());
-            wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
             queue[0].setArrived(timeElapsed+1);
+            done_proc++;
           }
         }
         timeElapsed++;
@@ -148,9 +150,10 @@ class Scheduler{
       int timeArrived;
       std::vector<process>queue;
       std::vector<process> curr_run;
+      int done_proc=0;
       bool init = true;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
-      while(!wait_queue.empty()){
+      while(done_proc != wait_queue.size()){
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
@@ -167,20 +170,28 @@ class Scheduler{
         }
         //Catch first iteration of  running
         if(!curr_run.empty()){
-          curr_run[0].tick();
           //CHECK IF PROCESS ALREADY OVER
+          curr_run[0].tick();
           if(curr_run[0].isProcessOver()){
             timeArrived = curr_run[0].getArrived();
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
             curr_run[0].getCpuTime()<<"x\t \t"<<endl;
             curr_run[0].resetCpuTime();
-            wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
             curr_run.erase(curr_run.begin());
-            curr_run.push_back(queue[0]);
-            curr_run[0].setArrived(timeElapsed+1);
-            queue.erase(queue.begin());
+            done_proc++;
           }
         }
+        else{
+          curr_run.push_back(queue[0]);
+          curr_run[0].setArrived(timeElapsed);
+          queue.erase(queue.begin());
+          curr_run[0].tick();
+        }
+        // cout<<"QUEUE: " << timeElapsed<<endl;
+        // printProcessDetails(queue);
+        // cout<<endl;
+        // printProcessDetails(curr_run);
+        // cout<<endl;
         timeElapsed++;
       }
     }
@@ -189,14 +200,16 @@ class Scheduler{
       int timeArrived;
       std::vector<process>queue;
       std::vector<process> curr_run;
+      int done_proc=0;
       bool init = true;
       bool queueAdded = false;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
-      while(!wait_queue.empty()){
+      while(done_proc!=process_vector.size()){
         //Find Process that Arrives already
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
+            wait_queue[curr].setPos(curr);
             queue.push_back(wait_queue[curr]);
             queueAdded = true;
           }
@@ -234,15 +247,23 @@ class Scheduler{
             timeArrived = curr_run[0].getArrived();
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
             curr_run[0].getCpuTime()<<"x\t \t"<<endl;
-            //Remove from list of process to run
-            wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
             //Change the current running to next in queue
             curr_run.erase(curr_run.begin());
-            curr_run.push_back(queue[0]);
-            queue.erase(queue.begin());
-            curr_run[0].setArrived(timeElapsed+1);
+            done_proc++;
+            sortBy(&queue, "BURST");
           }
         }
+        else{
+          curr_run.push_back(queue[0]);
+          curr_run[0].setArrived(timeElapsed);
+          queue.erase(queue.begin());
+          curr_run[0].tick();
+        }
+        // cout<<"QUEUE: " << timeElapsed<<endl;
+        // printProcessDetails(queue);
+        // cout<<endl;
+        // printProcessDetails(curr_run);
+        // cout<<endl;
         timeElapsed++;
       }
     }
@@ -253,8 +274,9 @@ class Scheduler{
       std::vector<process> curr_run;
       bool init = true;
       bool queueAdded = false;
+      int done_proc = 0;
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
-      while(!wait_queue.empty()){
+      while(done_proc != process_vector.size()){
         //Find Process that Arrives already
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
@@ -288,27 +310,30 @@ class Scheduler{
           }
           queueAdded = false;
         }
-        cout<<"QUEUE: " << timeElapsed<<endl;
-        printProcessDetails(queue);
-        cout<<endl;
-        printProcessDetails(curr_run);
-        cout<<endl;
-        //Catch first iteration of  running
+
+        // Catch first iteration of  running
         if(!curr_run.empty()){
           curr_run[0].tick();
           //CHECK IF PROCESS ALREADY OVER
           if(curr_run[0].isProcessOver()){
             timeArrived = curr_run[0].getArrived();
-            cout<<"PROCESS ENDED : "<<endl;
+            // cout<<"PROCESS ENDED : "<<endl;
             cout<< "     "<<timeArrived<< "  "<<"\t\t"<< curr_run[0].getIndex()<<"\t\t"<<
             curr_run[0].getCpuTime()<<"x\t \t"<<endl;
             //Remove from list of process to run
             wait_queue.erase(wait_queue.begin()+curr_run[0].getIndex());
             //Change the current running to next in queue
             curr_run.erase(curr_run.begin());
+            sortBy(&queue, "PRIORITY");
+            done_proc++;
           }
         }
-
+        else{
+          curr_run.push_back(queue[0]);
+          queue.erase(queue.begin());
+          curr_run[0].setArrived(timeElapsed);
+          curr_run[0].tick();
+        }
         timeElapsed++;
       }
     }
@@ -355,13 +380,14 @@ class Scheduler{
       int qcount = quantum;
       int counter = 0;
       int turn = 0;
+      int done_proc = 0;
       //FCFS QUEUE : PROCESS THAT RUNS
       std::vector<process>queue;
       std::vector<int>burst;
-    
+
       cout<< "Time Arrived\t"<< "  Process Index \t   " << "Processed Time \t "<<endl;
 
-      while(!wait_queue.empty()){
+      while(done_proc!=process_vector.size()){
         // if(timeElapsed<100){cout<<timeElapsed<<endl;}
         //CHECKS IF ARRIVAL TIME IS SAME AS TIME ELAPSED
         for(int curr=0; curr<wait_queue.size(); curr++){
@@ -397,76 +423,18 @@ class Scheduler{
             queue[0].getCpuTime()<<"x\t \t" << "TAT ->" << turn <<"\t \t" << "WT ->" << turn - burst[counter] << endl;
             queue[0].resetCpuTime();
             queue.erase(queue.begin());
-            wait_queue.erase(wait_queue.begin()+queue[0].getIndex());
             queue[0].setArrived(timeElapsed);
             qcount = quantum;
             counter++;
+            done_proc++;
           }
 
         }
-          
+
           queue[0].tick();
           timeElapsed++;
           qcount--;
 
       }
     }
-
-    // //RETURN VECTOR SORTED BASED ON GIVEN SORT STRING
-    // std::vector<process> SortBy(std::vector<process> processes, string SortString){
-    //    	std::vector<int> Sorter;
-    //    	std::vector<int> ProduceBurst;
-    //    	std::vector<int> ProduceArrival;
-    //    	std::vector<int> ProducePriority;
-    //    	std::vector<int> ProduceIndex;
-    //     std::vector<process> final_form;
-    //     cout<< "ProcessIndex\t"<< "  Arrival Time \t   " << "Burst Time \t " << "Priority Index"<<endl;
-    //     for(int i = 0; i<processes.size(); i++){
-    //       // cout<< "     "<<processes[i].getIndex() << "  "<<"\t\t"<< processes[i].getArrival()<<"\t\t"<<
-    //       // processes[i].getBurst()<<"\t \t"
-    //       // <<processes[i].getPrio()<<endl;
-    //     //GET SORT BY WHICH STRING, PUSH BACK TO SORTER container to use sort function
-    // 		if (SortString == "Arrival"){Sorter.push_back(processes[i].getArrival());}
-    // 		else if (SortString == "Priority"){Sorter.push_back(processes[i].getPrio());}
-    // 		else if (SortString == "Burst"){Sorter.push_back(processes[i].getBurst());}
-    // 		else Sorter.push_back(processes[i].getIndex());
-    //       }
-    //       //Sorter Index
-    //       	int ice = 0;
-    //       //Number to compare
-    //       	int comp = 0;
-    //       // SORT THE SORTER Then compare with original vector
-    //         std::sort (Sorter.begin(), Sorter.end(), descOrder);
-    //
-    //     	cout << endl;
-    //
-    //           while(!Sorter.empty()){
-    //    					int val = Sorter.back();
-    //    					if (SortString == "FCFS"){comp = processes[ice].getArrival();}
-    //    					else comp = processes[ice].getBurst();
-    //
-    //     		 		if (SortString == "Arrival"){comp = processes[ice].getArrival();}
-    //     				else if (SortString == "Priority"){comp = processes[ice].getPrio();}
-    //     				else if (SortString == "Burst"){comp = processes[ice].getBurst();}
-    //     				else comp = processes[ice].getIndex();
-    //
-    //      				if(val == comp){
-    //                	ProduceBurst.push_back(processes[ice].getBurst());
-    //                	ProduceArrival.push_back(processes[ice].getArrival());
-    //                	ProducePriority.push_back(processes[ice].getPrio());
-    //                	ProduceIndex.push_back(processes[ice].getIndex());
-    //                	moveItemToBack(processes, ice);
-    //                	Sorter.pop_back();
-    //           	   	ice = -1;
-    //    				      }
-    //    				  ice++;
-    //       		}
-    //
-    //       	for (int i = 0; i< ProduceArrival.size(); i++){
-    // 		    process p = process(ProduceIndex[i], ProduceArrival[i], ProduceBurst[i], ProducePriority[i]);
-    //         final_form.push_back(p);
-    // 		    }
-    //
-    // 		return final_form;
-    //   }
 };
