@@ -21,7 +21,7 @@ public:
         int getBurst(){ return burst_time; }
         int getPrio(){ return prio_num; }
         int getArrived(){ return timeArrived; }
-        int getIndex(){ return index; }
+        int getIndex(){ return index+1; }
         int getCpuTime(){ return cpuTime; }
         int getPos(){ return pos; }
 

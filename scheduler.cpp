@@ -133,7 +133,6 @@ class Scheduler{
         for(int curr=0; curr<wait_queue.size(); curr++){
           if(timeElapsed == wait_queue[curr].getArrival()){
             wait_queue[curr].setArrived(timeElapsed);
-            wait_queue[curr].setPos(curr);
             queue.push_back(wait_queue[curr]);
             burst.push_back(wait_queue[curr].getBurst());
           }
@@ -162,7 +161,7 @@ class Scheduler{
         else donothing++;
 
         timeElapsed++;
-        if (wait_queue.size() == 0) {
+        if (wait_queue.size() == done_proc) {
           avg_response = total_response/burst.size();
           utilization = ((((double)turn - (double)donothing)/(double)turn)*100);
           cout << endl << "Cumulative Waiting Time: " << total_wait_time << endl;
@@ -486,7 +485,7 @@ class Scheduler{
           timeElapsed++;
           qcount--;
 
-          if (wait_queue.size() == 0) {
+          if (wait_queue.size() == done_proc) {
           avg_response = total_response/burst.size();
           utilization = ((((double)turn - (double)donothing)/(double)turn)*100);
           cout << endl << "Cumulative Waiting Time: " << total_wait_time << endl;
